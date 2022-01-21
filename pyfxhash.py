@@ -28,14 +28,21 @@ def entire_collection(gtid, fields):
 
 def hashes(gtid):
     for item in entire_collection(gtid, 'generationHash'):
-        print(item['generationHash'])
+        yield item['generationHash']
 
 def images(gtid):
-    for item in entire_collection(gtid, 'iteration metadata'):
-        ipfsid = item['metadata']['displayUri'][7:]
-        iteration = int(item['iteration'])
+    for item in entire_collection(gtid, 'metadata'):
+        yield item['metadata']['displayUri'][7:]
+
+def download_images(gtid):
+    dirname = f'./images/{gtid:d}'
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    iteration = 0
+    for ipfsid in images(gtid):
+        iteration += 1
         url = f'https://gateway.fxhash.xyz/ipfs/{ipfsid}'
-        filename = f'./{gtid:d}-{iteration:04d}.png'
+        filename = f'{dirname}/{gtid:d}-{iteration:04d}.png'
         if os.path.exists(filename):
             continue
         request = requests.get(url, stream=True)
@@ -44,6 +51,15 @@ def images(gtid):
             with open(filename, 'wb') as f:
                 shutil.copyfileobj(request.raw, f)
             print(filename)
+
+def output(data, fmt='default'):
+    _data = list(data)
+    _data.reverse()
+    if fmt == 'default':
+        for line in _data:
+            print(line)
+    elif fmt == 'json':
+        print(json.dumps(_data))
 
 if __name__ == '__main__':
     # logging.basicConfig(level=logging.DEBUG)
@@ -54,16 +70,28 @@ if __name__ == '__main__':
     parser.add_argument('--hashes', action='store_true', default=False,
                         help='Get hashes')
     parser.add_argument('--images', action='store_true', default=False,
-                        help='Get images')
+                        help='Get images ipfs ids')
+    parser.add_argument('--download_images', action='store_true', default=False,
+                        help='Download images')
+    parser.add_argument('--format', action='store', default='default',
+                        help='Output format')
     args = parser.parse_args()
 
-    if not args.hashes and not args.images:
+    if not args.hashes and \
+       not args.images and \
+       not args.download_images:
         parser.print_help()
         sys.exit(1)
 
     for gtid in args.id:
-        print('#', gtid)
+        gtid = int(gtid)
+        print(f'##', gtid)
+        data = None
         if args.hashes:
-            hashes(gtid)
+            print('# hashes')
+            output(hashes(gtid), args.format)
         if args.images:
-            images(gtid)
+            print('# images')
+            output(images(gtid), args.format)
+        if args.download_images:
+            download_images(gtid)
