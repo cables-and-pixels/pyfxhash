@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys, os, argparse, json, requests, logging, shutil
-from pprint import pprint
 
 # Sample API explorer:
 # https://studio.apollographql.com/sandbox/explorer
