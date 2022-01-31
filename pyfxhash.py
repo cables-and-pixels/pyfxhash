@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 import sys, os, argparse, json, requests, logging, shutil
-
-# from pprint import pprint
+from pprint import pprint
 
 # Sample API explorer:
 # https://studio.apollographql.com/sandbox/explorer
@@ -34,6 +33,24 @@ def images(gtid):
     for item in entire_collection(gtid, 'metadata'):
         yield item['metadata']['displayUri'][7:]
 
+def attributes(gtid):
+    for item in entire_collection(gtid, 'metadata'):
+        if 'attributes' in item['metadata']:
+            yield { a['name']: a['value']
+                    for a in item['metadata']['attributes'] }
+        else:
+            yield {}
+
+def owners(gtid):
+    for item in entire_collection(gtid, 'owner { id name }'):
+        if 'owner' in item:
+            yield [
+                item['owner']['id'],
+                item['owner']['name'] or ''
+            ]
+        else:
+            yield []
+
 def download_images(gtid):
     dirname = f'./images/{gtid:d}'
     if not os.path.exists(dirname):
@@ -57,7 +74,10 @@ def output(data, fmt='default'):
     _data.reverse()
     if fmt == 'default':
         for line in _data:
-            print(line)
+            if isinstance(line, list):
+                print(' '.join(line))
+            else:
+                print(line)
     elif fmt == 'json':
         print(json.dumps(_data))
 
@@ -71,6 +91,10 @@ if __name__ == '__main__':
                         help='Get hashes')
     parser.add_argument('--images', action='store_true', default=False,
                         help='Get images ipfs ids')
+    parser.add_argument('--attributes', action='store_true', default=False,
+                        help='Get attributes')
+    parser.add_argument('--owners', action='store_true', default=False,
+                        help='Get owners')
     parser.add_argument('--download_images', action='store_true', default=False,
                         help='Download images')
     parser.add_argument('--format', action='store', default='default',
@@ -79,6 +103,8 @@ if __name__ == '__main__':
 
     if not args.hashes and \
        not args.images and \
+       not args.attributes and \
+       not args.owners and \
        not args.download_images:
         parser.print_help()
         sys.exit(1)
@@ -93,5 +119,11 @@ if __name__ == '__main__':
         if args.images:
             print('# images')
             output(images(gtid), args.format)
+        if args.attributes:
+            print('# attributes')
+            output(attributes(gtid), args.format)
+        if args.owners:
+            print('# owners')
+            output(owners(gtid), args.format)
         if args.download_images:
             download_images(gtid)
