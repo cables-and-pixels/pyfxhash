@@ -21,6 +21,7 @@ def entire_collection(gtid, fields):
        result['data']['generativeToken'] is None:
         return
     collection = result['data']['generativeToken']['entireCollection']
+    collection.reverse()
     for item in collection:
         yield item
 
@@ -70,7 +71,6 @@ def download_images(gtid):
 
 def output(data, fmt='default'):
     _data = list(data)
-    _data.reverse()
     if fmt == 'default':
         for line in _data:
             if isinstance(line, list):
@@ -90,8 +90,8 @@ if __name__ == '__main__':
                         help='Get hashes')
     parser.add_argument('--images', action='store_true', default=False,
                         help='Get images ipfs ids')
-    parser.add_argument('--attributes', action='store_true', default=False,
-                        help='Get attributes')
+    parser.add_argument('--features', action='store_true', default=False,
+                        help='Get features')
     parser.add_argument('--owners', action='store_true', default=False,
                         help='Get owners')
     parser.add_argument('--download_images', action='store_true', default=False,
@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     if not args.hashes and \
        not args.images and \
-       not args.attributes and \
+       not args.features and \
        not args.owners and \
        not args.download_images:
         parser.print_help()
@@ -118,8 +118,8 @@ if __name__ == '__main__':
         if args.images:
             print('# images')
             output(images(gtid), args.format)
-        if args.attributes:
-            print('# attributes')
+        if args.features:
+            print('# features')
             output(attributes(gtid), args.format)
         if args.owners:
             print('# owners')
