@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-import sys, os, argparse, json, requests, logging, shutil
+import sys, os, argparse, json, requests, logging, shutil, csv
 
 # Sample API explorer:
 # https://studio.apollographql.com/sandbox/explorer
 
 fxhash_endpoint = 'https://api.fxhash.xyz/graphql/'
+csv_writer = csv.writer(sys.stdout)
 
 def entire_collection(gtid, fields):
     query = f"""{{
@@ -77,6 +78,8 @@ def output(data, fmt='default'):
                 print(' '.join(line))
             else:
                 print(line)
+    elif fmt == 'csv':
+        csv_writer.writerows(_data)
     elif fmt == 'json':
         print(json.dumps(_data))
 
@@ -110,19 +113,14 @@ if __name__ == '__main__':
 
     for gtid in args.id:
         gtid = int(gtid)
-        print(f'##', gtid)
         data = None
         if args.hashes:
-            print('# hashes')
             output(hashes(gtid), args.format)
         if args.images:
-            print('# images')
             output(images(gtid), args.format)
         if args.features:
-            print('# features')
             output(attributes(gtid), args.format)
         if args.owners:
-            print('# owners')
             output(owners(gtid), args.format)
         if args.download_images:
             download_images(gtid)
