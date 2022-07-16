@@ -2,8 +2,8 @@
 
 import sys, os, argparse, json, requests, logging, shutil, csv
 
-# Sample API explorer:
-# https://studio.apollographql.com/sandbox/explorer
+# API explorer:
+# https://sandbox.apollo.dev/?endpoint=https://api.fxhash.xyz/graphql/
 
 fxhash_endpoint = 'https://api.fxhash.xyz/graphql/'
 csv_writer = csv.writer(sys.stdout)
@@ -81,7 +81,7 @@ def output(data, fmt='default'):
     elif fmt == 'csv':
         csv_writer.writerows(_data)
     elif fmt == 'json':
-        print(json.dumps(_data))
+        print(json.dumps(_data, indent=2))
 
 if __name__ == '__main__':
     # logging.basicConfig(level=logging.DEBUG)
