@@ -31,8 +31,8 @@ def hashes(gtid):
         yield item['generationHash']
 
 def images(gtid):
-    for item in entire_collection(gtid, 'metadata'):
-        yield item['metadata']['displayUri'][7:]
+    for item in entire_collection(gtid, 'iteration metadata'):
+        yield [item['iteration'], item['metadata']['displayUri'][7:]]
 
 def attributes(gtid):
     for item in entire_collection(gtid, 'metadata'):
@@ -58,8 +58,8 @@ def download_images(gtid):
         os.makedirs(dirname)
     iteration = 0
     for ipfsid in images(gtid):
-        iteration += 1
-        url = f'https://gateway.fxhash.xyz/ipfs/{ipfsid}'
+        iteration = ipfsid[0]
+        url = f'https://gateway.fxhash.xyz/ipfs/{ipfsid[1]}'
         filename = f'{dirname}/{gtid:d}-{iteration:04d}.png'
         if os.path.exists(filename):
             continue
