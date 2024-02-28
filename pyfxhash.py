@@ -3,14 +3,14 @@
 import sys, os, argparse, json, requests, logging, shutil, csv
 
 # API explorer:
-# https://sandbox.apollo.dev/?endpoint=https://api.fxhash.xyz/graphql/
+# https://sandbox.apollo.dev/?endpoint=https://api.v2-temp.fxhash.xyz/graphql/
 
-fxhash_endpoint = 'https://api.fxhash.xyz/graphql/'
+fxhash_endpoint = 'https://api.v2-temp.fxhash.xyz/graphql/'
 csv_writer = csv.writer(sys.stdout)
 
 def entire_collection(gtid, fields):
     query = f"""{{
-        generativeToken(id: {gtid}) {{
+        generativeToken(id: "{gtid}") {{
             entireCollection {{ {fields} }}
         }}
     }}"""
@@ -37,30 +37,29 @@ def images(gtid):
 def attributes(gtid):
     for item in entire_collection(gtid, 'metadata'):
         if 'attributes' in item['metadata']:
-            yield { a['name']: a['value']
+            yield { a['trait_type']: a['value']
                     for a in item['metadata']['attributes'] }
         else:
             yield {}
 
 def owners(gtid):
-    for item in entire_collection(gtid, 'owner { id name }'):
+    for item in entire_collection(gtid, 'owner { id account { username } }'):
         if 'owner' in item:
             yield [
                 item['owner']['id'],
-                item['owner']['name'] or ''
+                item['owner']['account']['username'] or ''
             ]
         else:
             yield []
 
 def download_images(gtid):
-    dirname = f'./images/{gtid:d}'
+    dirname = f'./images/{gtid}'
     if not os.path.exists(dirname):
         os.makedirs(dirname)
-    iteration = 0
     for ipfsid in images(gtid):
         iteration = ipfsid[0]
         url = f'https://gateway.fxhash.xyz/ipfs/{ipfsid[1]}'
-        filename = f'{dirname}/{gtid:d}-{iteration:04d}.png'
+        filename = f'{dirname}/{gtid}-{iteration:04d}.png'
         if os.path.exists(filename):
             continue
         request = requests.get(url, stream=True)
@@ -112,7 +111,6 @@ if __name__ == '__main__':
         sys.exit(1)
 
     for gtid in args.id:
-        gtid = int(gtid)
         data = None
         if args.hashes:
             output(hashes(gtid), args.format)
